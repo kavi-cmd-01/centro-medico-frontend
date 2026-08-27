@@ -4,8 +4,8 @@
     <h2 class="m-0 fw-bold text-dark">Centro Médico Digital</h2>
     <div class="d-flex gap-3">
       <span class="badge bg-primary fs-6 p-2">👥 Pacientes: {{ pacientes.length }}</span>
-      <span class="badge bg-warning text-dark fs-6 p-2">🏆 Médicos: 0</span>
-      <span class="badge bg-success fs-6 p-2">📅 Citas: 0</span>
+      <span class="badge bg-warning text-dark fs-6 p-2">🏆 Médicos: {{ medicos.length }}</span>
+      <span class="badge bg-success fs-6 p-2">📅 Citas: {{ citas.length }}</span>
     </div>
   </div>
 
@@ -72,26 +72,32 @@
 
     <!-- Formulario Agendar Cita -->
     <div class="col-md-4 mb-3">
-      <div class="card p-4 border-0 shadow-sm rounded-3 h-100 bg-light">
-        <h5 class="fw-bold mb-3 text-secondary">Agendar Cita</h5>
-        <form>
+      <div class="card p-4 border-0 shadow-sm rounded-3 h-100">
+        <h5 class="fw-bold mb-3">Agendar Cita</h5>
+        <form (ngSubmit)="agendarCita()">
           <div class="mb-2">
-            <select class="form-select" disabled>
-              <option>-- Seleccionar Paciente --</option>
+            <select class="form-select" [(ngModel)]="nuevaCita.pacienteId" name="pacienteCita" required>
+              <option value="">-- Seleccionar Paciente --</option>
+              <option *ngFor="let p of pacientes" [value]="p.id">
+                {{ p.nombre }} {{ p.apellido }}
+              </option>
             </select>
           </div>
           <div class="mb-2">
-            <select class="form-select" disabled>
-              <option>-- Seleccionar Médico --</option>
+            <select class="form-select" [(ngModel)]="nuevaCita.medicoId" name="medicoCita" required>
+              <option value="">-- Seleccionar Médico --</option>
+              <option *ngFor="let m of medicos" [value]="m.id">
+                Dr/a. {{ m.nombre }} ({{ m.especialidad || 'General' }})
+              </option>
             </select>
           </div>
           <div class="mb-2">
-            <input type="datetime-local" class="form-control" disabled>
+            <input type="datetime-local" class="form-control" [(ngModel)]="nuevaCita.fecha" name="fechaCita" required>
           </div>
           <div class="mb-3">
-            <input type="text" class="form-control" placeholder="Motivo de la consulta" disabled>
+            <input type="text" class="form-control" [(ngModel)]="nuevaCita.motivo" name="motivoCita" placeholder="Motivo de la consulta">
           </div>
-          <button class="btn btn-success w-100 py-2" disabled>
+          <button type="submit" class="btn btn-success w-100 py-2 fw-bold">
             Agendar Cita
           </button>
         </form>
@@ -147,9 +153,29 @@
       <div class="card p-4 border-0 shadow-sm rounded-3">
         <h5 class="fw-bold mb-3">Listado de Citas</h5>
 
-        <div class="alert alert-light text-center border m-0">
+        <div *ngIf="citas.length === 0" class="alert alert-light text-center border m-0">
           <p class="mb-0 text-muted">No hay citas programadas.</p>
         </div>
+
+        <div *ngIf="citas.length > 0" class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+            <tr>
+              <th>Paciente</th>
+              <th>Médico</th>
+              <th>Fecha</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let c of citas">
+              <td><strong>{{ c.pacienteNombre }}</strong></td>
+              <td>{{ c.medicoNombre }}</td>
+              <td><small>{{ c.fecha | date:'dd/MM/yyyy HH:mm' }}</small></td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+
       </div>
     </div>
   </div>

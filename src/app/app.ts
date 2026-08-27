@@ -4,6 +4,22 @@ import { FormsModule } from '@angular/forms';
 import { PacienteService } from './services/paciente.service';
 import { Paciente } from './models/paciente';
 
+interface Medico {
+  id?: number;
+  nombre: string;
+  especialidad: string;
+  telefono: string;
+  email: string;
+}
+
+interface Cita {
+  id?: number;
+  pacienteNombre: string;
+  medicoNombre: string;
+  fecha: string;
+  motivo: string;
+}
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -14,10 +30,12 @@ import { Paciente } from './models/paciente';
 export class AppComponent implements OnInit {
   title = 'centro-medico-frontend';
 
-  // Lista principal de pacientes
+  // Listas de datos
   pacientes: Paciente[] = [];
+  medicos: Medico[] = [];
+  citas: Cita[] = [];
 
-  // Objeto para el formulario de paciente
+  // Formularios
   nuevoPaciente: Paciente = {
     nombre: '',
     apellido: '',
@@ -26,15 +44,20 @@ export class AppComponent implements OnInit {
     email: ''
   };
 
-  // Objeto para el formulario de médico
-  nuevoMedico = {
+  nuevoMedico: Medico = {
     nombre: '',
     especialidad: '',
     telefono: '',
     email: ''
   };
 
-  // Variable para controlar el modo edición de pacientes
+  nuevaCita = {
+    pacienteId: '',
+    medicoId: '',
+    fecha: '',
+    motivo: ''
+  };
+
   idEdicion: number | null = null;
 
   constructor(
@@ -46,20 +69,17 @@ export class AppComponent implements OnInit {
     this.obtenerPacientes();
   }
 
-  // Obtener el listado de pacientes desde Render
+  // Pacientes
   obtenerPacientes(): void {
     this.pacienteService.obtenerPacientes().subscribe({
       next: (data: Paciente[]) => {
         this.pacientes = [...data];
         this.cdr.detectChanges();
       },
-      error: (err) => {
-        console.error('Error al obtener pacientes:', err);
-      }
+      error: (err) => console.error('Error al obtener pacientes:', err)
     });
   }
 
-  // Guardar o Actualizar un paciente
   guardarPaciente(): void {
     if (this.idEdicion !== null) {
       this.pacienteService.actualizarPaciente(this.idEdicion, this.nuevoPaciente).subscribe({
@@ -80,7 +100,6 @@ export class AppComponent implements OnInit {
     }
   }
 
-  // Cargar datos en el formulario para editar paciente
   editarPaciente(paciente: Paciente): void {
     if (paciente.id !== undefined) {
       this.idEdicion = paciente.id;
@@ -89,46 +108,62 @@ export class AppComponent implements OnInit {
     }
   }
 
-  // Eliminar un paciente
   eliminarPaciente(id: number | undefined): void {
     if (id !== undefined && confirm('¿Estás seguro de eliminar este paciente?')) {
       this.pacienteService.eliminarPaciente(id).subscribe({
-        next: () => {
-          this.obtenerPacientes();
-        },
+        next: () => this.obtenerPacientes(),
         error: (err) => console.error('Error al eliminar paciente:', err)
       });
     }
   }
 
-  // Resetear el formulario de paciente
   limpiarFormulario(): void {
     this.idEdicion = null;
-    this.nuevoPaciente = {
-      nombre: '',
-      apellido: '',
-      dni: '',
-      telefono: '',
-      email: ''
-    };
+    this.nuevoPaciente = { nombre: '', apellido: '', dni: '', telefono: '', email: '' };
     this.cdr.detectChanges();
   }
 
-  // Procesar guardar médico
+  // Médicos
   guardarMedico(): void {
     if (!this.nuevoMedico.nombre) {
-      alert('Por favor, ingresa al menos el nombre del médico.');
+      alert('Por favor, ingresa el nombre del médico.');
       return;
     }
 
-    alert(`Médico registrado con éxito: Dr/a. ${this.nuevoMedico.nombre}`);
-
-    this.nuevoMedico = {
-      nombre: '',
-      especialidad: '',
-      telefono: '',
-      email: ''
+    const medicoGuardado: Medico = {
+      id: Date.now(),
+      ...this.nuevoMedico
     };
+
+    this.medicos.push(medicoGuardado);
+    alert(`Médico guardado: Dr/a. ${this.nuevoMedico.nombre}`);
+
+    this.nuevoMedico = { nombre: '', especialidad: '', telefono: '', email: '' };
     this.cdr.detectChanges();
+  }
+
+  // Citas
+  agendarCita(): void {
+    if (!this.nuevaCita.pacienteId || !this.nuevaCita.medicoId || !this.nuevaCita.fecha) {
+      alert('Por favor selecciona un paciente, un médico y una fecha.');
+      return;
+    }
+
+    const paciente = this.pacientes.find(p => p.id === Number(this.nuevaCita.pacienteId));
+    const medico = this.medicos.find(m => m.id === Number(this.nuevaCita.medicoId));
+
+    if (paciente && medico) {
+      this.citas.push({
+        id: Date.now(),
+        pacienteNombre: `${paciente.nombre} ${paciente.apellido}`,
+        medicoNombre: medico.nombre,
+        fecha: this.nuevaCita.fecha,
+        motivo: this.nuevaCita.motivo
+      });
+
+      alert('Cita agendada con éxito.');
+      this.nuevaCita = { pacienteId: '', medicoId: '', fecha: '', motivo: '' };
+      this.cdr.detectChanges();
+    }
   }
 }
