@@ -8,7 +8,7 @@ import { Cita } from '../models/cita';
 })
 export class CitaService {
   private http = inject(HttpClient);
-  private apiUrl = 'https://centro-medico-plrv.onrender.com';
+  private apiUrl = 'https://centro-medico-plrv.onrender.com/api/citas';
 
   obtenerCitas(): Observable<Cita[]> {
     return this.http.get<Cita[]>(this.apiUrl);
