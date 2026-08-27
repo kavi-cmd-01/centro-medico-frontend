@@ -1,7 +1,7 @@
 export interface Paciente {
   id?: number;
   nombre: string;
-  apellidos: string;
+  apellido: string;
   dni: string;
   telefono: string;
   email: string;

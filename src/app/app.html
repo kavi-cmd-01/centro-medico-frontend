@@ -25,7 +25,7 @@
           </div>
           <div class="mb-2">
             <label class="form-label">Apellido</label>
-            <input type="text" class="form-control" [(ngModel)]="nuevoPaciente.apellidos" name="apellidos" required>
+            <input type="text" class="form-control" [(ngModel)]="nuevoPaciente.apellido" name="apellido" required>
           </div>
           <div class="mb-2">
             <label class="form-label">DNI</label>
@@ -75,7 +75,7 @@
             <tbody>
             <tr *ngFor="let paciente of pacientes">
               <td>{{ paciente.id }}</td>
-              <td><strong>{{ paciente.nombre }} {{ paciente.apellidos }}</strong></td>
+              <td><strong>{{ paciente.nombre }} {{ paciente.apellido }}</strong></td>
               <td>{{ paciente.dni }}</td>
               <td>
                 <small class="d-block">{{ paciente.email }}</small>
