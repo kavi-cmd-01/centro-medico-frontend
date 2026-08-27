@@ -193,7 +193,7 @@ export class AppComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-// Citas (Maneja si apellido o apellidos viene indefinido)
+  // --- CITAS ---
   agendarCita(): void {
     if (!this.nuevaCita.pacienteId || !this.nuevaCita.medicoId || !this.nuevaCita.fecha) {
       Swal.fire('Campos incompletos', 'Selecciona paciente, médico y fecha.', 'info');
@@ -219,3 +219,4 @@ export class AppComponent implements OnInit {
       this.cdr.detectChanges();
     }
   }
+}
