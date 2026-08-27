@@ -1,182 +1,136 @@
-<div class="container my-4">
-  <!-- Encabezado con métricas -->
-  <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-light rounded shadow-sm">
-    <h2 class="m-0 fw-bold text-dark">Centro Médico Digital</h2>
-    <div class="d-flex gap-3">
-      <span class="badge bg-primary fs-6 p-2">👥 Pacientes: {{ pacientes.length }}</span>
-      <span class="badge bg-warning text-dark fs-6 p-2">🏆 Médicos: {{ medicos.length }}</span>
-      <span class="badge bg-success fs-6 p-2">📅 Citas: {{ citas.length }}</span>
-    </div>
-  </div>
+<div class="min-h-screen bg-gray-100 p-4 md:p-8">
 
-  <!-- FILA 1: PACIENTES, MÉDICOS Y CITAS -->
-  <div class="row mb-4">
-    <!-- Formulario Nuevo / Editar Paciente -->
-    <div class="col-md-4 mb-3">
-      <div class="card p-4 border-0 shadow-sm rounded-3 h-100">
-        <h5 class="fw-bold mb-3">
-          {{ idEdicion !== null ? 'Editar Paciente' : 'Nuevo Paciente' }}
-        </h5>
-        <form (ngSubmit)="guardarPaciente()">
-          <div class="mb-2">
-            <input type="text" class="form-control" [(ngModel)]="nuevoPaciente.nombre" name="nombre" placeholder="Nombre" required>
-          </div>
-          <div class="mb-2">
-            <input type="text" class="form-control" [(ngModel)]="nuevoPaciente.apellido" name="apellido" placeholder="Apellido" required>
-          </div>
-          <div class="mb-2">
-            <input type="text" class="form-control" [(ngModel)]="nuevoPaciente.dni" name="dni" placeholder="DNI" required>
-          </div>
-          <div class="mb-2">
-            <input type="text" class="form-control" [(ngModel)]="nuevoPaciente.telefono" name="telefono" placeholder="Teléfono">
-          </div>
-          <div class="mb-3">
-            <input type="email" class="form-control" [(ngModel)]="nuevoPaciente.email" name="email" placeholder="Email">
-          </div>
+  <!-- 1. Encabezado principal y Contadores de arriba -->
+  <header class="max-w-7xl mx-auto mb-8">
+    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+      <h1 class="text-3xl font-extrabold text-gray-800 text-center md:text-left">
+        Centro Médico Digital
+      </h1>
 
-          <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
-              {{ idEdicion !== null ? 'Actualizar Paciente' : 'Guardar Paciente' }}
-            </button>
-            <button type="button" *ngIf="idEdicion !== null" (click)="limpiarFormulario()" class="btn btn-outline-secondary">
-              Cancelar
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Formulario Añadir Médico -->
-    <div class="col-md-4 mb-3">
-      <div class="card p-4 border-0 shadow-sm rounded-3 h-100">
-        <h5 class="fw-bold mb-3">Añadir Médico</h5>
-        <form (ngSubmit)="guardarMedico()">
-          <div class="mb-2">
-            <input type="text" class="form-control" [(ngModel)]="nuevoMedico.nombre" name="nombreMedico" placeholder="Nombre" required>
-          </div>
-          <div class="mb-2">
-            <input type="text" class="form-control" [(ngModel)]="nuevoMedico.especialidad" name="especialidadMedico" placeholder="Especialidad">
-          </div>
-          <div class="mb-2">
-            <input type="text" class="form-control" [(ngModel)]="nuevoMedico.telefono" name="telefonoMedico" placeholder="Teléfono">
-          </div>
-          <div class="mb-3">
-            <input type="email" class="form-control" [(ngModel)]="nuevoMedico.email" name="emailMedico" placeholder="Email">
-          </div>
-          <button type="submit" class="btn btn-warning text-dark w-100 py-2 fw-bold">
-            Guardar Médico
-          </button>
-        </form>
-      </div>
-    </div>
-
-    <!-- Formulario Agendar Cita -->
-    <div class="col-md-4 mb-3">
-      <div class="card p-4 border-0 shadow-sm rounded-3 h-100">
-        <h5 class="fw-bold mb-3">Agendar Cita</h5>
-        <form (ngSubmit)="agendarCita()">
-          <div class="mb-2">
-            <select class="form-select" [(ngModel)]="nuevaCita.pacienteId" name="pacienteCita" required>
-              <option value="">-- Seleccionar Paciente --</option>
-              <option *ngFor="let p of pacientes" [value]="p.id">
-                {{ p.nombre }} {{ p.apellido }}
-              </option>
-            </select>
-          </div>
-          <div class="mb-2">
-            <select class="form-select" [(ngModel)]="nuevaCita.medicoId" name="medicoCita" required>
-              <option value="">-- Seleccionar Médico --</option>
-              <option *ngFor="let m of medicos" [value]="m.id">
-                Dr/a. {{ m.nombre }} ({{ m.especialidad || 'General' }})
-              </option>
-            </select>
-          </div>
-          <div class="mb-2">
-            <input type="datetime-local" class="form-control" [(ngModel)]="nuevaCita.fecha" name="fechaCita" required>
-          </div>
-          <div class="mb-3">
-            <input type="text" class="form-control" [(ngModel)]="nuevaCita.motivo" name="motivoCita" placeholder="Motivo de la consulta">
-          </div>
-          <button type="submit" class="btn btn-success w-100 py-2 fw-bold">
-            Agendar Cita
-          </button>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- FILA 2: LISTADOS -->
-  <div class="row">
-    <!-- Listado de Pacientes Registrados -->
-    <div class="col-md-7 mb-4">
-      <div class="card p-4 border-0 shadow-sm rounded-3">
-        <h5 class="fw-bold mb-3">Listado de Pacientes Registrados</h5>
-
-        <div *ngIf="pacientes.length === 0" class="alert alert-info text-center m-0">
-          No hay pacientes registrados en este momento.
+      <!-- Contadores responsivos: apilados en móvil, en fila en tablet/desktop -->
+      <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+        <div class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-center gap-2 shadow-sm">
+          👥 Pacientes: <span class="bg-blue-800 px-2 py-0.5 rounded-full text-sm">{{ pacientes.length }}</span>
         </div>
+        <div class="bg-amber-500 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-center gap-2 shadow-sm">
+          🏆 Médicos: <span class="bg-amber-700 px-2 py-0.5 rounded-full text-sm">1</span>
+        </div>
+        <div class="bg-emerald-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-center gap-2 shadow-sm">
+          📅 Citas: <span class="bg-emerald-800 px-2 py-0.5 rounded-full text-sm">0</span>
+        </div>
+      </div>
+    </div>
+  </header>
 
-        <div *ngIf="pacientes.length > 0" class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-            <tr>
-              <th>ID</th>
-              <th>Nombre</th>
-              <th>DNI</th>
-              <th>Contacto</th>
-              <th class="text-end">Acciones</th>
+  <!-- 2. Bloque de Formularios (1 columna en móvil, 2 en tablet, 3 en escritorio) -->
+  <main class="max-w-7xl mx-auto space-y-8">
+
+    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      <!-- Formulario: Nuevo Paciente -->
+      <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex flex-col justify-between">
+        <div>
+          <h2 class="text-xl font-bold text-gray-800 mb-4">Nuevo Paciente</h2>
+          <form class="space-y-3">
+            <input type="text" [(ngModel)]="nuevoPaciente.nombre" name="nombre" placeholder="Nombre" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            <input type="text" [(ngModel)]="nuevoPaciente.apellido" name="apellido" placeholder="Apellido" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            <input type="text" [(ngModel)]="nuevoPaciente.dni" name="dni" placeholder="DNI" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            <input type="text" [(ngModel)]="nuevoPaciente.telefono" name="telefono" placeholder="Teléfono" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            <input type="email" [(ngModel)]="nuevoPaciente.email" name="email" placeholder="Correo electrónico" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+          </form>
+        </div>
+        <button (click)="guardarPaciente()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg transition mt-4">
+          Guardar
+        </button>
+      </div>
+
+      <!-- Formulario: Añadir Médico -->
+      <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex flex-col justify-between">
+        <div>
+          <h2 class="text-xl font-bold text-gray-800 mb-4">Añadir Médico</h2>
+          <form class="space-y-3">
+            <input type="text" placeholder="Nombre del Médico" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            <input type="text" placeholder="Especialidad" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+          </form>
+        </div>
+        <button class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 rounded-lg transition mt-4">
+          Guardar Médico
+        </button>
+      </div>
+
+      <!-- Formulario: Agendar Cita -->
+      <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex flex-col justify-between">
+        <div>
+          <h2 class="text-xl font-bold text-gray-800 mb-4">Agendar Cita</h2>
+          <form class="space-y-3">
+            <select class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+              <option value="">Seleccionar Paciente</option>
+            </select>
+            <select class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+              <option value="">Seleccionar Médico</option>
+            </select>
+            <input type="datetime-local" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+          </form>
+        </div>
+        <button class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg transition mt-4">
+          Agendar Cita
+        </button>
+      </div>
+
+    </section>
+
+    <!-- 3. Bloque de Listados / Tablas (1 columna en móvil, 2 en pantallas grandes) -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- Listado de Pacientes -->
+      <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Listado de Pacientes Registrados</h2>
+
+        <!-- Envoltorio con scroll horizontal si la pantalla es muy estrecha -->
+        <div class="overflow-x-auto w-full">
+          <table class="w-full text-left border-collapse min-w-[500px]">
+            <thead>
+            <tr class="border-b text-gray-500 text-sm">
+              <th class="p-2">ID</th>
+              <th class="p-2">Nombre</th>
+              <th class="p-2">DNI</th>
+              <th class="p-2">Contacto</th>
+              <th class="p-2 text-center">Acciones</th>
             </tr>
             </thead>
-            <tbody>
-            <tr *ngFor="let paciente of pacientes">
-              <td>{{ paciente.id }}</td>
-              <td><strong>{{ paciente.nombre }} {{ paciente.apellido }}</strong></td>
-              <td>{{ paciente.dni }}</td>
-              <td>
-                <small class="d-block text-dark">{{ paciente.email }}</small>
-                <small class="text-muted">{{ paciente.telefono }}</small>
+            <tbody class="divide-y divide-gray-100">
+            <tr *ngFor="let p of pacientes" class="hover:bg-gray-50">
+              <td class="p-2 font-medium">{{ p.id }}</td>
+              <td class="p-2">{{ p.nombre }} {{ p.apellido }}</td>
+              <td class="p-2">{{ p.dni }}</td>
+              <td class="p-2 text-sm text-gray-600">
+                <div>{{ p.email }}</div>
+                <div class="text-xs text-gray-400">{{ p.telefono }}</div>
               </td>
-              <td class="text-end">
-                <button class="btn btn-sm btn-outline-warning me-1" (click)="editarPaciente(paciente)">✏️ Editar</button>
-                <button class="btn btn-sm btn-outline-danger" (click)="eliminarPaciente(paciente.id)">🗑️ Eliminar</button>
+              <td class="p-2 text-center space-x-2">
+                <button (click)="eliminarPaciente(p.id)" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="pacientes.length === 0">
+              <td colspan="5" class="p-4 text-center text-gray-400">
+                No hay pacientes registrados en este momento.
               </td>
             </tr>
             </tbody>
           </table>
         </div>
-
       </div>
-    </div>
 
-    <!-- Listado de Citas -->
-    <div class="col-md-5 mb-4">
-      <div class="card p-4 border-0 shadow-sm rounded-3">
-        <h5 class="fw-bold mb-3">Listado de Citas</h5>
-
-        <div *ngIf="citas.length === 0" class="alert alert-light text-center border m-0">
-          <p class="mb-0 text-muted">No hay citas programadas.</p>
+      <!-- Listado de Citas -->
+      <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Listado de Citas</h2>
+        <div class="p-8 text-center text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
+          No hay citas programadas.
         </div>
-
-        <div *ngIf="citas.length > 0" class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-            <tr>
-              <th>Paciente</th>
-              <th>Médico</th>
-              <th>Fecha</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr *ngFor="let c of citas">
-              <td><strong>{{ c.pacienteNombre }}</strong></td>
-              <td>{{ c.medicoNombre }}</td>
-              <td><small>{{ c.fecha | date:'dd/MM/yyyy HH:mm' }}</small></td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-
       </div>
-    </div>
-  </div>
+
+    </section>
+  </main>
 </div>
