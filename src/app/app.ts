@@ -1,204 +1,104 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import Swal from 'sweetalert2';
-
+import { FormsModule } from '@angular/forms';
 import { PacienteService } from './services/paciente.service';
-import { CitaService } from './services/cita.service';
-import { MedicoService } from './services/medico.service';
-
 import { Paciente } from './models/paciente';
-import { Cita } from './models/cita';
-import { Medico } from './models/medico';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App implements OnInit {
-  pacientes = signal<Paciente[]>([]);
-  pacienteEnEdicionId = signal<number | null>(null);
-  citas = signal<Cita[]>([]);
-  medicos = signal<Medico[]>([]);
+export class AppComponent implements OnInit {
+  title = 'centro-medico-frontend';
 
-  private pacienteService = inject(PacienteService);
-  private citaService = inject(CitaService);
-  private medicoService = inject(MedicoService);
-  private fb = inject(FormBuilder);
+  // Lista principal de pacientes
+  pacientes: Paciente[] = [];
 
-  pacienteForm!: FormGroup;
-  citaForm!: FormGroup;
-  medicoForm!: FormGroup;
+  // Objeto para el formulario
+  nuevoPaciente: Paciente = {
+    nombre: '',
+    apellido: '',
+    dni: '',
+    telefono: '',
+    email: ''
+  };
 
-  esEdicion = false;
+  // Variable para controlar el modo edición
   idEdicion: number | null = null;
 
+  constructor(private pacienteService: PacienteService) {}
+
   ngOnInit(): void {
-    this.inicializarFormularios();
-    this.cargarPacientes();
-    this.cargarMedicos();
-    this.cargarCitas();
+    this.obtenerPacientes();
   }
 
-  private inicializarFormularios(): void {
-    this.pacienteForm = this.fb.group({
-      nombre: ['', [Validators.required, Validators.minLength(2)]],
-      apellidos: ['', [Validators.required, Validators.minLength(2)]],
-      dni: ['', [Validators.required, Validators.pattern('^[0-9]{8}[A-Za-z]$')]],
-      telefono: ['', [Validators.required, Validators.pattern('^[0-9]{9}$')]],
-      email: ['', [Validators.required, Validators.email]]
-    });
-
-    this.medicoForm = this.fb.group({
-      nombre: ['', [Validators.required, Validators.minLength(2)]],
-      apellidos: ['', [Validators.required, Validators.minLength(2)]],
-      especialidad: ['', Validators.required],
-      numColegiado: ['', Validators.required]
-    });
-
-    this.citaForm = this.fb.group({
-      pacienteId: ['', Validators.required],
-      medicoId: ['', Validators.required],
-      fechaHora: ['', Validators.required],
-      motivo: ['', [Validators.required, Validators.minLength(5)]]
-    });
-  }
-
-  cargarPacientes(): void {
+  // Obtener el listado de pacientes desde Render
+  obtenerPacientes(): void {
     this.pacienteService.obtenerPacientes().subscribe({
-      next: (data) => this.pacientes.set(data),
-      error: (err: any) => console.error('Error al cargar pacientes:', err)
-    });
-  }
-
-  cargarMedicos(): void {
-    this.medicoService.obtenerMedicos().subscribe({
-      next: (data) => this.medicos.set(data),
-      error: (err: any) => console.error('Error al cargar médicos:', err)
-    });
-  }
-
-  cargarCitas(): void {
-    this.citaService.obtenerCitas().subscribe({
-      next: (data) => this.citas.set(data),
-      error: (err: any) => console.error('Error al cargar citas:', err)
-    });
-  }
-
-  guardarMedico(): void {
-    if (this.medicoForm.invalid) {
-      this.medicoForm.markAllAsTouched();
-      return;
-    }
-
-    this.medicoService.crearMedico(this.medicoForm.value).subscribe({
-      next: () => {
-        this.cargarMedicos();
-        this.medicoForm.reset();
-        Swal.fire({ icon: 'success', title: 'Médico Registrado', timer: 2000, showConfirmButton: false });
+      next: (data: Paciente[]) => {
+        this.pacientes = data;
       },
-      error: (err: any) => Swal.fire('Error', 'No se pudo registrar el médico', 'error')
+      error: (err) => {
+        console.error('Error al obtener pacientes:', err);
+      }
     });
   }
 
+  // Guardar o Actualizar un paciente
   guardarPaciente(): void {
-    if (this.pacienteForm.invalid) {
-      this.pacienteForm.markAllAsTouched();
-      return;
-    }
-
-    const pacienteData: Paciente = this.pacienteForm.value;
-
-    if (this.esEdicion && this.idEdicion !== null) {
-      this.pacienteService.actualizarPaciente(this.idEdicion, pacienteData).subscribe({
+    if (this.idEdicion !== null) {
+      // Si estamos editando
+      this.pacienteService.actualizarPaciente(this.idEdicion, this.nuevoPaciente).subscribe({
         next: () => {
-          this.cargarPacientes();
-          this.cancelarEdicion();
-          Swal.fire({ icon: 'success', title: 'Paciente Actualizado', timer: 2000, showConfirmButton: false });
+          this.obtenerPacientes();
+          this.limpiarFormulario();
         },
-        error: (err: any) => Swal.fire('Error', 'No se pudo actualizar', 'error')
+        error: (err) => console.error('Error al actualizar paciente:', err)
       });
     } else {
-      this.pacienteService.crearPaciente(pacienteData).subscribe({
+      // Si estamos creando uno nuevo
+      this.pacienteService.crearPaciente(this.nuevoPaciente).subscribe({
         next: () => {
-          this.cargarPacientes();
-          this.pacienteForm.reset();
-          Swal.fire({ icon: 'success', title: 'Paciente Guardado', timer: 2000, showConfirmButton: false });
+          this.obtenerPacientes();
+          this.limpiarFormulario();
         },
-        error: (err: any) => Swal.fire('Error', 'No se pudo registrar', 'error')
+        error: (err) => console.error('Error al crear paciente:', err)
       });
     }
   }
 
-  guardarCita(): void {
-    if (this.citaForm.invalid) {
-      this.citaForm.markAllAsTouched();
-      return;
+  // Cargar datos en el formulario para editar
+  editarPaciente(paciente: Paciente): void {
+    if (paciente.id !== undefined) {
+      this.idEdicion = paciente.id;
+      this.nuevoPaciente = { ...paciente };
     }
+  }
 
-    const { pacienteId, medicoId, fechaHora, motivo } = this.citaForm.value;
+  // Eliminar un paciente
+  eliminarPaciente(id: number | undefined): void {
+    if (id !== undefined && confirm('¿Estás seguro de eliminar este paciente?')) {
+      this.pacienteService.eliminarPaciente(id).subscribe({
+        next: () => {
+          this.obtenerPacientes();
+        },
+        error: (err) => console.error('Error al eliminar paciente:', err)
+      });
+    }
+  }
 
-    // Formatear la fecha para LocalDateTime (ej. 2026-08-24T16:39:00)
-    const fechaFormateada = fechaHora.length === 16 ? `${fechaHora}:00` : fechaHora;
-
-    // Enviar directamente las referencias de los objetos con su ID
-    const nuevaCita = {
-      fechaHora: fechaFormateada,
-      motivo: motivo,
-      paciente: { id: Number(pacienteId) },
-      medico: { id: Number(medicoId) }
+  // Resetear el formulario
+  limpiarFormulario(): void {
+    this.idEdicion = null;
+    this.nuevoPaciente = {
+      nombre: '',
+      apellido: '',
+      dni: '',
+      telefono: '',
+      email: ''
     };
-
-    this.citaService.crearCita(nuevaCita as any).subscribe({
-      next: () => {
-        this.cargarCitas();
-        this.citaForm.reset();
-        Swal.fire({ icon: 'success', title: 'Cita Agendada Correctamente', timer: 2000, showConfirmButton: false });
-      },
-      error: (err: any) => {
-        console.error('Detalle del error 500:', err);
-        Swal.fire('Error', 'Error en el servidor al guardar la cita.', 'error');
-      }
-    });
-  }
-
-  eliminarCita(id: number | undefined): void {
-    if (!id) return;
-    Swal.fire({
-      title: '¿Cancelar cita?', icon: 'warning', showCancelButton: true,
-      confirmButtonColor: '#ef4444', confirmButtonText: 'Sí, cancelar'
-    }).then((r) => {
-      if (r.isConfirmed) {
-        this.citaService.eliminarCita(id).subscribe({
-          next: () => this.cargarCitas(),
-          error: (err: any) => Swal.fire('Error', 'No se pudo cancelar', 'error')
-        });
-      }
-    });
-  }
-// Para la edición de pacientes
-editarPaciente(paciente: Paciente): void {
-  if (paciente.id) {
-    this.pacienteEnEdicionId.set(paciente.id);
-    this.pacienteForm.patchValue({
-      nombre: paciente.nombre,
-      apellidos: paciente.apellidos,
-      dni: paciente.dni,
-      telefono: paciente.telefono,
-      email: paciente.email
-    });
-  }
-}
-
-cancelarEdicion(): void {
-  this.pacienteEnEdicionId.set(null);
-  this.pacienteForm.reset();
-}
-  esCampoInvalido(form: FormGroup, campo: string): boolean {
-    const control = form.get(campo);
-    return !!(control && control.invalid && (control.dirty || control.touched));
   }
 }
