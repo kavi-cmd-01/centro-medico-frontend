@@ -9,9 +9,9 @@
     </div>
   </div>
 
-  <!-- FILA 1: PACIENTES Y MÉDICOS -->
+  <!-- FILA 1: PACIENTES, MÉDICOS Y CITAS -->
   <div class="row mb-4">
-    <!-- Formulario Paciente -->
+    <!-- Formulario Nuevo Paciente -->
     <div class="col-md-4 mb-3">
       <div class="card p-4 border-0 shadow-sm rounded-3 h-100">
         <h5 class="fw-bold mb-3">
@@ -47,30 +47,30 @@
     </div>
 
     <!-- Formulario Añadir Médico -->
-    <!-- Formulario Añadir Médico -->
     <div class="col-md-4 mb-3">
       <div class="card p-4 border-0 shadow-sm rounded-3 h-100">
         <h5 class="fw-bold mb-3">Añadir Médico</h5>
-        <form>
+        <form (ngSubmit)="guardarMedico()">
           <div class="mb-2">
-            <input type="text" class="form-control" placeholder="Nombre">
+            <input type="text" class="form-control" [(ngModel)]="nuevoMedico.nombre" name="nombreMedico" placeholder="Nombre" required>
           </div>
           <div class="mb-2">
-            <input type="text" class="form-control" placeholder="Apellido">
+            <input type="text" class="form-control" [(ngModel)]="nuevoMedico.especialidad" name="especialidadMedico" placeholder="Especialidad">
           </div>
           <div class="mb-2">
-            <input type="text" class="form-control" placeholder="Teléfono">
+            <input type="text" class="form-control" [(ngModel)]="nuevoMedico.telefono" name="telefonoMedico" placeholder="Teléfono">
           </div>
           <div class="mb-3">
-            <input type="email" class="form-control" placeholder="Email">
+            <input type="email" class="form-control" [(ngModel)]="nuevoMedico.email" name="emailMedico" placeholder="Email">
           </div>
-          <button type="button" class="btn btn-warning text-dark w-100 py-2 fw-bold">
+          <button type="submit" class="btn btn-warning text-dark w-100 py-2 fw-bold">
             Guardar Médico
           </button>
         </form>
       </div>
     </div>
-    <!-- Agendar Cita -->
+
+    <!-- Formulario Agendar Cita -->
     <div class="col-md-4 mb-3">
       <div class="card p-4 border-0 shadow-sm rounded-3 h-100 bg-light">
         <h5 class="fw-bold mb-3 text-secondary">Agendar Cita</h5>

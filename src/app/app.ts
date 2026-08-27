@@ -26,7 +26,15 @@ export class AppComponent implements OnInit {
     email: ''
   };
 
-  // Variable para controlar el modo edición
+  // Objeto para el formulario de médico
+  nuevoMedico = {
+    nombre: '',
+    especialidad: '',
+    telefono: '',
+    email: ''
+  };
+
+  // Variable para controlar el modo edición de pacientes
   idEdicion: number | null = null;
 
   constructor(
@@ -42,9 +50,7 @@ export class AppComponent implements OnInit {
   obtenerPacientes(): void {
     this.pacienteService.obtenerPacientes().subscribe({
       next: (data: Paciente[]) => {
-        // Crear una nueva referencia de arreglo para que Angular detecte el cambio
         this.pacientes = [...data];
-        // Forzar el refresco de la interfaz
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -56,7 +62,6 @@ export class AppComponent implements OnInit {
   // Guardar o Actualizar un paciente
   guardarPaciente(): void {
     if (this.idEdicion !== null) {
-      // Editar existente
       this.pacienteService.actualizarPaciente(this.idEdicion, this.nuevoPaciente).subscribe({
         next: () => {
           this.obtenerPacientes();
@@ -65,7 +70,6 @@ export class AppComponent implements OnInit {
         error: (err) => console.error('Error al actualizar paciente:', err)
       });
     } else {
-      // Crear nuevo
       this.pacienteService.crearPaciente(this.nuevoPaciente).subscribe({
         next: () => {
           this.obtenerPacientes();
@@ -76,7 +80,7 @@ export class AppComponent implements OnInit {
     }
   }
 
-  // Cargar datos en el formulario para editar
+  // Cargar datos en el formulario para editar paciente
   editarPaciente(paciente: Paciente): void {
     if (paciente.id !== undefined) {
       this.idEdicion = paciente.id;
@@ -97,13 +101,31 @@ export class AppComponent implements OnInit {
     }
   }
 
-  // Resetear el formulario
+  // Resetear el formulario de paciente
   limpiarFormulario(): void {
     this.idEdicion = null;
     this.nuevoPaciente = {
       nombre: '',
       apellido: '',
       dni: '',
+      telefono: '',
+      email: ''
+    };
+    this.cdr.detectChanges();
+  }
+
+  // Procesar guardar médico
+  guardarMedico(): void {
+    if (!this.nuevoMedico.nombre) {
+      alert('Por favor, ingresa al menos el nombre del médico.');
+      return;
+    }
+
+    alert(`Médico registrado con éxito: Dr/a. ${this.nuevoMedico.nombre}`);
+
+    this.nuevoMedico = {
+      nombre: '',
+      especialidad: '',
       telefono: '',
       email: ''
     };
