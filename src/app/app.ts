@@ -3,9 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PacienteService } from './services/paciente.service';
 import { Paciente } from './models/paciente';
+import Swal from 'sweetalert2';
 
 interface Medico {
-  id?: number;
+  id: number;
   nombre: string;
   especialidad: string;
   telefono: string;
@@ -13,7 +14,7 @@ interface Medico {
 }
 
 interface Cita {
-  id?: number;
+  id: number;
   pacienteNombre: string;
   medicoNombre: string;
   fecha: string;
@@ -30,12 +31,10 @@ interface Cita {
 export class AppComponent implements OnInit {
   title = 'centro-medico-frontend';
 
-  // Listas de datos
   pacientes: Paciente[] = [];
   medicos: Medico[] = [];
   citas: Cita[] = [];
 
-  // Formularios
   nuevoPaciente: Paciente = {
     nombre: '',
     apellido: '',
@@ -45,6 +44,7 @@ export class AppComponent implements OnInit {
   };
 
   nuevoMedico: Medico = {
+    id: 0,
     nombre: '',
     especialidad: '',
     telefono: '',
@@ -67,35 +67,54 @@ export class AppComponent implements OnInit {
 
   ngOnInit(): void {
     this.obtenerPacientes();
+    this.cargarMedicosLocalStorage();
   }
 
-  // Pacientes
+  // --- PACIENTES ---
   obtenerPacientes(): void {
     this.pacienteService.obtenerPacientes().subscribe({
       next: (data: Paciente[]) => {
         this.pacientes = [...data];
         this.cdr.detectChanges();
       },
-      error: (err) => console.error('Error al obtener pacientes:', err)
+      error: (err) => {
+        console.error('Error al obtener pacientes:', err);
+        Swal.fire('Error', 'No se pudieron cargar los pacientes desde el servidor.', 'error');
+      }
     });
   }
 
   guardarPaciente(): void {
+    if (!this.nuevoPaciente.nombre || !this.nuevoPaciente.apellido || !this.nuevoPaciente.dni) {
+      Swal.fire('Atención', 'Por favor, completa Nombre, Apellido y DNI.', 'warning');
+      return;
+    }
+
     if (this.idEdicion !== null) {
+      // Actualizar paciente existente
       this.pacienteService.actualizarPaciente(this.idEdicion, this.nuevoPaciente).subscribe({
         next: () => {
+          Swal.fire('¡Actualizado!', 'El paciente ha sido actualizado correctamente.', 'success');
           this.obtenerPacientes();
           this.limpiarFormulario();
         },
-        error: (err) => console.error('Error al actualizar paciente:', err)
+        error: (err) => {
+          console.error('Error al actualizar paciente:', err);
+          Swal.fire('Error', 'No se pudo actualizar el paciente en el servidor.', 'error');
+        }
       });
     } else {
+      // Crear nuevo paciente
       this.pacienteService.crearPaciente(this.nuevoPaciente).subscribe({
         next: () => {
+          Swal.fire('¡Registrado!', 'El paciente se ha guardado con éxito.', 'success');
           this.obtenerPacientes();
           this.limpiarFormulario();
         },
-        error: (err) => console.error('Error al crear paciente:', err)
+        error: (err) => {
+          console.error('Error al crear paciente:', err);
+          Swal.fire('Error', 'No se pudo guardar el paciente en la base de datos.', 'error');
+        }
       });
     }
   }
@@ -109,24 +128,56 @@ export class AppComponent implements OnInit {
   }
 
   eliminarPaciente(id: number | undefined): void {
-    if (id !== undefined && confirm('¿Estás seguro de eliminar este paciente?')) {
-      this.pacienteService.eliminarPaciente(id).subscribe({
-        next: () => this.obtenerPacientes(),
-        error: (err) => console.error('Error al eliminar paciente:', err)
-      });
-    }
+    if (id === undefined) return;
+
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: 'Esta acción eliminará al paciente permanentemente.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.pacienteService.eliminarPaciente(id).subscribe({
+          next: () => {
+            Swal.fire('Eliminado', 'El paciente ha sido eliminado.', 'success');
+            this.obtenerPacientes();
+          },
+          error: (err) => {
+            console.error('Error al eliminar paciente:', err);
+            Swal.fire('Error', 'No se pudo eliminar el paciente del servidor.', 'error');
+          }
+        });
+      }
+    });
   }
 
   limpiarFormulario(): void {
     this.idEdicion = null;
-    this.nuevoPaciente = { nombre: '', apellido: '', dni: '', telefono: '', email: '' };
+    this.nuevoPaciente = {
+      nombre: '',
+      apellido: '',
+      dni: '',
+      telefono: '',
+      email: ''
+    };
     this.cdr.detectChanges();
   }
 
-  // Médicos
+  // --- MÉDICOS (Con persistencia en LocalStorage) ---
+  cargarMedicosLocalStorage(): void {
+    const medicosGuardados = localStorage.getItem('medicos');
+    if (medicosGuardados) {
+      this.medicos = JSON.parse(medicosGuardados);
+    }
+  }
+
   guardarMedico(): void {
     if (!this.nuevoMedico.nombre) {
-      alert('Por favor, ingresa el nombre del médico.');
+      Swal.fire('Atención', 'Ingresa el nombre del médico.', 'warning');
       return;
     }
 
@@ -136,16 +187,18 @@ export class AppComponent implements OnInit {
     };
 
     this.medicos.push(medicoGuardado);
-    alert(`Médico guardado: Dr/a. ${this.nuevoMedico.nombre}`);
+    localStorage.setItem('medicos', JSON.stringify(this.medicos));
 
-    this.nuevoMedico = { nombre: '', especialidad: '', telefono: '', email: '' };
+    Swal.fire('¡Éxito!', `Médico Dr/a. ${this.nuevoMedico.nombre} guardado correctamente.`, 'success');
+
+    this.nuevoMedico = { id: 0, nombre: '', especialidad: '', telefono: '', email: '' };
     this.cdr.detectChanges();
   }
 
-  // Citas
+  // --- CITAS ---
   agendarCita(): void {
     if (!this.nuevaCita.pacienteId || !this.nuevaCita.medicoId || !this.nuevaCita.fecha) {
-      alert('Por favor selecciona un paciente, un médico y una fecha.');
+      Swal.fire('Campos incompletos', 'Selecciona paciente, médico y fecha.', 'info');
       return;
     }
 
@@ -161,7 +214,7 @@ export class AppComponent implements OnInit {
         motivo: this.nuevaCita.motivo
       });
 
-      alert('Cita agendada con éxito.');
+      Swal.fire('¡Cita Agendada!', 'La cita ha sido registrada con éxito.', 'success');
       this.nuevaCita = { pacienteId: '', medicoId: '', fecha: '', motivo: '' };
       this.cdr.detectChanges();
     }
