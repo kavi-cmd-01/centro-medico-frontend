@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PacienteService } from './services/paciente.service';
@@ -17,7 +17,7 @@ export class AppComponent implements OnInit {
   // Lista principal de pacientes
   pacientes: Paciente[] = [];
 
-  // Objeto para el formulario
+  // Objeto para el formulario de paciente
   nuevoPaciente: Paciente = {
     nombre: '',
     apellido: '',
@@ -29,7 +29,10 @@ export class AppComponent implements OnInit {
   // Variable para controlar el modo edición
   idEdicion: number | null = null;
 
-  constructor(private pacienteService: PacienteService) {}
+  constructor(
+    private pacienteService: PacienteService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.obtenerPacientes();
@@ -39,7 +42,10 @@ export class AppComponent implements OnInit {
   obtenerPacientes(): void {
     this.pacienteService.obtenerPacientes().subscribe({
       next: (data: Paciente[]) => {
-        this.pacientes = data;
+        // Crear una nueva referencia de arreglo para que Angular detecte el cambio
+        this.pacientes = [...data];
+        // Forzar el refresco de la interfaz
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error al obtener pacientes:', err);
@@ -50,7 +56,7 @@ export class AppComponent implements OnInit {
   // Guardar o Actualizar un paciente
   guardarPaciente(): void {
     if (this.idEdicion !== null) {
-      // Si estamos editando
+      // Editar existente
       this.pacienteService.actualizarPaciente(this.idEdicion, this.nuevoPaciente).subscribe({
         next: () => {
           this.obtenerPacientes();
@@ -59,7 +65,7 @@ export class AppComponent implements OnInit {
         error: (err) => console.error('Error al actualizar paciente:', err)
       });
     } else {
-      // Si estamos creando uno nuevo
+      // Crear nuevo
       this.pacienteService.crearPaciente(this.nuevoPaciente).subscribe({
         next: () => {
           this.obtenerPacientes();
@@ -75,6 +81,7 @@ export class AppComponent implements OnInit {
     if (paciente.id !== undefined) {
       this.idEdicion = paciente.id;
       this.nuevoPaciente = { ...paciente };
+      this.cdr.detectChanges();
     }
   }
 
@@ -100,5 +107,6 @@ export class AppComponent implements OnInit {
       telefono: '',
       email: ''
     };
+    this.cdr.detectChanges();
   }
 }
