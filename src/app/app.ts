@@ -193,7 +193,7 @@ export class AppComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  // --- CITAS ---
+// Citas (Maneja si apellido o apellidos viene indefinido)
   agendarCita(): void {
     if (!this.nuevaCita.pacienteId || !this.nuevaCita.medicoId || !this.nuevaCita.fecha) {
       Swal.fire('Campos incompletos', 'Selecciona paciente, médico y fecha.', 'info');
@@ -204,9 +204,11 @@ export class AppComponent implements OnInit {
     const medico = this.medicos.find(m => m.id === Number(this.nuevaCita.medicoId));
 
     if (paciente && medico) {
+      const apellidoStr = paciente.apellido || (paciente as any).apellidos || '';
+
       this.citas.push({
         id: Date.now(),
-        pacienteNombre: `${paciente.nombre} ${paciente.apellido}`,
+        pacienteNombre: `${paciente.nombre} ${apellidoStr}`.trim(),
         medicoNombre: medico.nombre,
         fecha: this.nuevaCita.fecha,
         motivo: this.nuevaCita.motivo
@@ -217,4 +219,3 @@ export class AppComponent implements OnInit {
       this.cdr.detectChanges();
     }
   }
-}
