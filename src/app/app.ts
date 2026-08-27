@@ -20,7 +20,7 @@ export class AppComponent implements OnInit {
   // Objeto para el formulario
   nuevoPaciente: Paciente = {
     nombre: '',
-    apellido: '',
+    apellidos: '',
     dni: '',
     telefono: '',
     email: ''
@@ -95,7 +95,7 @@ export class AppComponent implements OnInit {
     this.idEdicion = null;
     this.nuevoPaciente = {
       nombre: '',
-      apellido: '',
+      apellidos: '',
       dni: '',
       telefono: '',
       email: ''
