@@ -91,7 +91,6 @@ export class AppComponent implements OnInit {
     }
 
     if (this.idEdicion !== null) {
-      // Actualizar paciente existente
       this.pacienteService.actualizarPaciente(this.idEdicion, this.nuevoPaciente).subscribe({
         next: () => {
           Swal.fire('¡Actualizado!', 'El paciente ha sido actualizado correctamente.', 'success');
@@ -104,7 +103,6 @@ export class AppComponent implements OnInit {
         }
       });
     } else {
-      // Crear nuevo paciente
       this.pacienteService.crearPaciente(this.nuevoPaciente).subscribe({
         next: () => {
           Swal.fire('¡Registrado!', 'El paciente se ha guardado con éxito.', 'success');
@@ -167,7 +165,7 @@ export class AppComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  // --- MÉDICOS (Con persistencia en LocalStorage) ---
+  // --- MÉDICOS ---
   cargarMedicosLocalStorage(): void {
     const medicosGuardados = localStorage.getItem('medicos');
     if (medicosGuardados) {
@@ -182,8 +180,8 @@ export class AppComponent implements OnInit {
     }
 
     const medicoGuardado: Medico = {
-      id: Date.now(),
-      ...this.nuevoMedico
+      ...this.nuevoMedico,
+      id: Date.now()
     };
 
     this.medicos.push(medicoGuardado);
